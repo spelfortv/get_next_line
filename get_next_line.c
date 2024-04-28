@@ -12,100 +12,89 @@
 
 #include "get_next_line.h"
 
-char	*ft_read_file(int fd, char *txt_saved)
+char	*ft_delete(char **str)
 {
-	char	*buffer;
-	int		bytes;
-
-	buffer = (char *)malloc(sizeof(char) * (BUFFER_SIZE + 1));
-	if (buffer == NULL)
-		return (NULL);
-	bytes = 1;
-	while (!ft_strchr(txt_saved, '\n') && bytes != 0)
+	if (*str)
 	{
-		bytes = read(fd, buffer, BUFFER_SIZE);
-		if (bytes == -1)
-		{
-			free(buffer);
-			free(txt_saved);
-			return (NULL);
-		}
-		buffer[bytes] = '\0';
-		txt_saved = ft_strjoin(txt_saved, buffer);
+		free(*str);
+		*str = NULL;
 	}
-	free(buffer);
-	return (txt_saved);
+	return (NULL);
 }
 
-char	*ft_buffer_to_line(char *txt_saved)
+char	*tidy_up(char *storage)
 {
-	int		i;
-	int		j;
-	char	*line;
+	char	*new_storage;
+	char	*ptr;
+	int		len;
 
-	i = 0;
-	while (txt_saved[i] != '\0' && txt_saved[i] != '\n')
-		i++;
-	line = (char *)malloc(sizeof(char) * (i + 2));
+	ptr = ft_strchr(storage, '\n');
+	if (!ptr)
+		return (ft_delete(&storage));
+	else
+		len = (ptr - storage) + 1;
+	if (!storage[len])
+		return (ft_delete(&storage));
+	new_storage = ft_substr(storage, len, ft_strlen(storage) - len);
+	ft_delete(&storage);
+	if (!new_storage)
+		return (NULL);
+	return (new_storage);
+}
+
+char	*fresh_line(char *storage)
+{
+	char	*line;
+	char	*ptr;
+	int		len;
+
+	ptr = ft_strchr(storage, '\n');
+	len = (ptr - storage) + 1;
+	line = ft_substr(storage, 0, len);
 	if (!line)
 		return (NULL);
-	j = 0;
-	while (j < i)
-	{
-		line[j] = txt_saved[j];
-		j++;
-	}
-	if (txt_saved[j] == '\n')
-	{
-		line[j] = txt_saved[j];
-		j++;
-	}
-	line[j] = '\0';
 	return (line);
 }
 
-char	*ft_st_save(char *st_save)
+char	*read_data(int fd, char *storage)
 {
-	int		c;
-	int		w;
-	char	*s;
+	int		ret;
+	char	*buffer;
 
-	c = 0;
-	while (st_save[c] && st_save[c] != '\n')
-		c++;
-	if (!st_save[c])
+	ret = 1;
+	buffer = malloc(sizeof(char) * (BUFFER_SIZE + 1));
+	if (!buffer)
+		return (ft_delete(&storage));
+	buffer[0] = '\0';
+	while (ret > 0 && !ft_strchr(buffer, '\n'))
 	{
-		free(st_save);
-		return (NULL);
+		ret = read(fd, buffer, BUFFER_SIZE);
+		if (ret > 0)
+		{
+			buffer[ret] = '\0';
+			storage = ft_strjoin(storage, buffer);
+		}
 	}
-	s = (char *)malloc(sizeof(char) * ft_strlen(st_save) - c + 1);
-	if (!s)
-		return (NULL);
-	c++;
-	w = 0;
-	while (st_save[c])
-		s[w++] = st_save[c++];
-	s[w] = '\0';
-	free(st_save);
-	return (s);
+	free(buffer);
+	if (ret == -1)
+		return (ft_delete(&storage));
+	return (storage);
 }
 
 char	*get_next_line(int fd)
 {
+	static char	*storage = {0};
 	char		*line;
-	static char	*txt_saved;
 
-	if (fd < 0 || BUFFER_SIZE <= 0)
-		return (0);
-	txt_saved = ft_read_file(fd, txt_saved);
-	if (!txt_saved)
+	if (fd < 0)
 		return (NULL);
-	line = ft_buffer_to_line(txt_saved);
-	txt_saved = ft_st_save(txt_saved);
-	if (!line || !*line)
-	{
-		free(line);
+	if ((storage && !ft_strchr(storage, '\n')) || !storage)
+		storage = read_data(fd, storage);
+	if (!storage)
 		return (NULL);
-	}
+	line = fresh_line(storage);
+	if (!line)
+		return (ft_delete(&storage));
+	storage = tidy_up(storage);
 	return (line);
 }

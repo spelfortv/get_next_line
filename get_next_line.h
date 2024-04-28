@@ -13,16 +13,19 @@
 #ifndef GET_NEXT_LINE_H
 # define GET_NEXT_LINE_H
 
-# include <stdlib.h>
 # include <unistd.h>
-# include <fcntl.h>
 # include <stdio.h>
+# include <stdlib.h>
+# include <fcntl.h>
+# include <limits.h>
 
+size_t	ft_strlcpy(char *dst, char *src, size_t dstsize);
+size_t	ft_strlen(char *s);
 char	*ft_strjoin(char *s1, char *s2);
-size_t	ft_strlen(const char *str);
-char	*ft_strchr(const char	*str, int ch);
+char	*ft_strdup(char *s1);
+char	*ft_strchr(char *s, int c);
+char	*ft_substr(char *s, unsigned int start, size_t len);
 char	*get_next_line(int fd);
-char	*ft_st_save(char *st_save);
-char	*ft_read_st_save(int fd, char *save);
+char	*ft_delete(char **str);
 
 #endif
