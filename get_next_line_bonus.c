@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "get_next_line.h"
+#include "get_next_line_bonus.h"
 
 char	*ft_delete(char **str)
 {
@@ -83,18 +83,18 @@ char	*read_data(int fd, char *storage)
 
 char	*get_next_line(int fd)
 {
-	static char	*storage = {0};
+	static char	*storage[FOPEN_MAX];
 	char		*line;
 
 	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
-	if ((storage && !ft_strchr(storage, '\n')) || !storage)
-		storage = read_data(fd, storage);
-	if (!storage)
+	if ((storage[fd] && !ft_strchr(storage[fd], '\n')) || !storage[fd])
+		storage[fd] = read_data(fd, storage[fd]);
+	if (!storage[fd])
 		return (NULL);
-	line = fresh_line(storage);
+	line = fresh_line(storage[fd]);
 	if (!line)
-		return (ft_delete(&storage));
-	storage = tidy_up(storage);
+		return (ft_delete(&storage[fd]));
+	storage[fd] = tidy_up(storage[fd]);
 	return (line);
 }
